@@ -324,6 +324,8 @@ typename RBTree<Key>::Node* RBTree<Key>::copySubtree(Node* node, Node* parent) {
     return new_node;
 }
 
+
+// Вспомогательные функции для вывода дерева в консоль
 template <typename Key>
 void RBTree<Key>::print() const {
     if (root == nullptr)
@@ -353,4 +355,90 @@ void RBTree<Key>::printTree(Node* node, char prefix[], bool isLeft) const {
             printTree(node->left, newPrefix, true);
         }
     }
+}
+
+// Реализация методов для итератора
+template <typename Key>
+typename RBTree<Key>::Node* RBTree<Key>::iterator::treeMinimum(Node* node) const {
+    while (node && node->left) {
+        node = node->left;
+    }
+    return node;
+}
+
+template <typename Key>
+typename RBTree<Key>::Node* RBTree<Key>::iterator::treeMaximum(Node* node) const {
+    while (node && node->right) {
+        node = node->right;
+    }
+    return node;
+}
+
+template <typename Key>
+typename RBTree<Key>::Node* RBTree<Key>::iterator::successor(Node* node) const {
+    if (node->right) {
+        return treeMinimum(node->right);
+    }
+    Node* parent = node->parent;
+    while (parent && node == parent->right) {
+        node = parent;
+        parent = parent->parent;
+    }
+    return parent;
+}
+
+template <typename Key>
+typename RBTree<Key>::Node* RBTree<Key>::iterator::predecessor(Node* node) const {
+    if (node->left) {
+        return treeMaximum(node->left);
+    }
+    Node* parent = node->parent;
+    while (parent && node == parent->left) {
+        node = parent;
+        parent = parent->parent;
+    }
+    return parent;
+}
+
+// Для const_iterator аналогичные методы
+template <typename Key>
+const typename RBTree<Key>::Node* RBTree<Key>::const_iterator::treeMinimum(const Node* node) const {
+    while (node && node->left) {
+        node = node->left;
+    }
+    return node;
+}
+
+template <typename Key>
+const typename RBTree<Key>::Node* RBTree<Key>::const_iterator::treeMaximum(const Node* node) const {
+    while (node && node->right) {
+        node = node->right;
+    }
+    return node;
+}
+
+template <typename Key>
+const typename RBTree<Key>::Node* RBTree<Key>::const_iterator::successor(const Node* node) const {
+    if (node->right) {
+        return treeMinimum(node->right);
+    }
+    const Node* parent = node->parent;
+    while (parent && node == parent->right) {
+        node = parent;
+        parent = parent->parent;
+    }
+    return parent;
+}
+
+template <typename Key>
+const typename RBTree<Key>::Node* RBTree<Key>::const_iterator::predecessor(const Node* node) const {
+    if (node->left) {
+        return treeMaximum(node->left);
+    }
+    const Node* parent = node->parent;
+    while (parent && node == parent->left) {
+        node = parent;
+        parent = parent->parent;
+    }
+    return parent;
 }
