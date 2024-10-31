@@ -5,25 +5,25 @@
 
 namespace s21 {
     template <typename Key>
-    set<Key>::set() : RBTree<Key>() {}
+    set<Key>::set() : RBTree<Key, Key>() {}
 
     template <typename Key>
-    set<Key>::set(std::initializer_list<value_type> const &items) : RBTree<Key>() {
+    set<Key>::set(std::initializer_list<value_type> const &items) : RBTree<Key, Key>() {
         for (const auto& item : items) {
             this->insert(item);
         }
     }
 
     template <typename Key>
-    set<Key>::set(const set &s) : RBTree<Key>(s) {}
+    set<Key>::set(const set &s) : RBTree<Key, Key>(s) {}
 
     template <typename Key>
-    set<Key>::set(set &&s) noexcept : RBTree<Key>(std::move(s)) {}
+    set<Key>::set(set &&s) noexcept : RBTree<Key, Key>(std::move(s)) {}
 
     template <typename Key>
     set<Key>& set<Key>::operator=(set &&s) noexcept {
         if (this != &s) {
-            RBTree<Key>::operator=(std::move(s));
+            RBTree<Key, Key>::operator=(std::move(s));
         }
         return *this;
     }
@@ -31,35 +31,35 @@ namespace s21 {
     template <typename Key>
     set<Key>& set<Key>::operator=(const set &s) {
         if (this != &s) {
-            RBTree<Key>::operator=(s);
+            RBTree<Key, Key>::operator=(s);
         }
         return *this;
     }
 
     template <typename Key>
     void set<Key>::clear() {
-        RBTree<Key>::clear(RBTree<Key>::root);
-        RBTree<Key>::root = nullptr;
-        RBTree<Key>::node_count = 0;
+        RBTree<Key, Key>::clear(RBTree<Key, Key>::root);
+        RBTree<Key, Key>::root = nullptr;
+        RBTree<Key, Key>::node_count = 0;
     }
 
     template <typename Key>
     std::pair<typename set<Key>::iterator, bool> set<Key>::insert(const value_type& value) {
-        auto result = RBTree<Key>::insert(value);  
-        return std::make_pair(iterator(RBTree<Key>::root, result.first), result.second); 
+        auto result = RBTree<Key, Key>::insert(value, value);  
+        return std::make_pair(iterator(RBTree<Key, Key>::root, result.first), result.second); 
     }
 
     template <typename Key>
     void set<Key>::erase(iterator pos) {
         if (pos != this->end()) {
-            RBTree<Key>::erase(*pos);
+            RBTree<Key, Key>::erase(*pos);
         }
     }
 
     template <typename Key>
     void set<Key>::swap(set& other) {
-        std::swap(RBTree<Key>::root, other.root);
-        std::swap(RBTree<Key>::node_count, other.node_count);
+        std::swap(RBTree<Key, Key>::root, other.root);
+        std::swap(RBTree<Key, Key>::node_count, other.node_count);
     }
 
     template <typename Key>
@@ -72,12 +72,12 @@ namespace s21 {
 
     template <typename Key>
     typename set<Key>::iterator set<Key>::find(const key_type& key) {
-        return iterator(RBTree<Key>::root, RBTree<Key>::findNode(key));
+        return iterator(RBTree<Key, Key>::root, RBTree<Key, Key>::findNode(key));
     }
 
     template <typename Key>
     typename set<Key>::const_iterator set<Key>::find(const key_type& key) const {
-        return const_iterator(RBTree<Key>::root, RBTree<Key>::findNode(key));
+        return const_iterator(RBTree<Key, Key>::root, RBTree<Key, Key>::findNode(key));
     }
 
     template <typename Key>

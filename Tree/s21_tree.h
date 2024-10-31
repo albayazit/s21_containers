@@ -4,17 +4,18 @@
 #include <iostream>
 #include <utility> // std::pair
 
-template <typename Key>
+template <typename Key, typename Value>
 class RBTree {
     private:
         enum Color { RED, BLACK };
         struct Node {
             Key key;
+            Value value;
             Node* left;
             Node* right;
             Node* parent;
             Color color;
-            Node(Key k, Color c = RED) : key(k), left(nullptr), right(nullptr), parent(nullptr), color(c) {}
+            Node(Key k, Value v, Color c = RED) : key(k), value(v), left(nullptr), right(nullptr), parent(nullptr), color(c) {}
         };
 
         void leftRotate(Node* node);
@@ -34,8 +35,8 @@ class RBTree {
 
     public:
         using key_type = Key;
-        using value_type = Key;
-        using size_type = size_t;
+        using value_type = Value;
+        using size_type =  size_t;
 
         RBTree();
         RBTree(const RBTree& other);
@@ -45,12 +46,15 @@ class RBTree {
         ~RBTree();
         void clear(Node* node);
 
-        std::pair<Node*, bool> insert(const Key& key);
+        std::pair<Node*, bool> insert(const Key& key, const Value& value);
         void erase(const Key& key);
         bool contains(const Key& key) const;
         void print() const;
         void printTree(Node* node, char prefix[], bool isLeft) const;
         size_type size() const;
+        Value& at(const Key& key);
+        const Value& at(const Key& key) const;
+        Value& getOrInsert(const Key& key);
 
         class iterator {
             private:
@@ -92,7 +96,6 @@ class RBTree {
                 bool operator==(const iterator& other) const { return current == other.current; }
                 bool operator!=(const iterator& other) const { return current != other.current; }
         };
-
         class const_iterator {
             private:
                 const Node* current;

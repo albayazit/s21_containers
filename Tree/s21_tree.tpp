@@ -1,27 +1,27 @@
 #include "s21_tree.h"
 
-template <typename Key>
-RBTree<Key>::RBTree() : root(nullptr), node_count(0) {}
+template <typename Key, typename Value>
+RBTree<Key, Value>::RBTree() : root(nullptr), node_count(0) {}
 
-template <typename Key>
-RBTree<Key>::RBTree(const RBTree& other) : root(nullptr), node_count(0) {
+template <typename Key, typename Value>
+RBTree<Key, Value>::RBTree(const RBTree& other) : root(nullptr), node_count(0) {
     if (other.root) {
         root = copySubtree(other.root, nullptr);
         node_count = other.node_count;
     }
 }
 
-template <typename Key>
-RBTree<Key>::RBTree(RBTree&& other) noexcept : root(other.root), node_count(other.node_count) {
+template <typename Key, typename Value>
+RBTree<Key, Value>::RBTree(RBTree&& other) noexcept : root(other.root), node_count(other.node_count) {
     other.root = nullptr;
     other.node_count = 0;
 }
 
-template <typename Key>
-RBTree<Key>::~RBTree() { clear(root); }
+template <typename Key, typename Value>
+RBTree<Key, Value>::~RBTree() { clear(root); }
 
-template <typename Key>
-void RBTree<Key>::clear(Node* node) {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::clear(Node* node) {
     if (node) {
         clear(node->left);
         clear(node->right);
@@ -29,8 +29,8 @@ void RBTree<Key>::clear(Node* node) {
     }
 }
 
-template <typename Key>
-typename RBTree<Key>::Node* RBTree<Key>::findNode(const Key& key) const {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::Node* RBTree<Key, Value>::findNode(const Key& key) const {
     Node* current = root;
     while (current) {
         if (key < current->key) {
@@ -45,9 +45,9 @@ typename RBTree<Key>::Node* RBTree<Key>::findNode(const Key& key) const {
     return nullptr;
 }
 
-template <typename Key>
-std::pair<typename RBTree<Key>::Node*, bool> RBTree<Key>::insert(const Key& key) {
-    Node* new_node = new Node(key);
+template <typename Key, typename Value>
+std::pair<typename RBTree<Key, Value>::Node*, bool> RBTree<Key, Value>::insert(const Key& key, const Value& value) {
+    Node* new_node = new Node(key, value);
     Node* parent_node = nullptr;
     Node* find_place_node = root;
 
@@ -58,7 +58,7 @@ std::pair<typename RBTree<Key>::Node*, bool> RBTree<Key>::insert(const Key& key)
         else if (new_node->key > find_place_node->key)
             find_place_node = find_place_node->right;
         else
-            return std::make_pair(find_place_node, false); // Key already exist
+            return std::make_pair(find_place_node, false); // Key, Value already exist
     }
 
     new_node->parent = parent_node;
@@ -76,8 +76,8 @@ std::pair<typename RBTree<Key>::Node*, bool> RBTree<Key>::insert(const Key& key)
     return std::make_pair(new_node, true);
 }
 
-template <typename Key>
-void RBTree<Key>::insertFixup(Node* node) {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::insertFixup(Node* node) {
     while (node->parent && node->parent->color == RED) {
         if (node->parent == node->parent->parent->left) {
             Node* uncle_node = node->parent->parent->right;
@@ -116,8 +116,8 @@ void RBTree<Key>::insertFixup(Node* node) {
     root->color = BLACK;
 }
 
-template <typename Key>
-void RBTree<Key>::leftRotate(Node* node) {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::leftRotate(Node* node) {
     Node* new_parent = node->right;
     node->right = new_parent->left;
     if (new_parent->left != nullptr) {
@@ -135,8 +135,8 @@ void RBTree<Key>::leftRotate(Node* node) {
     node->parent = new_parent;
 }
 
-template <typename Key>
-void RBTree<Key>::rightRotate(Node* node) {
+template <typename Key,typename Value>
+void RBTree<Key, Value>::rightRotate(Node* node) {
     Node* new_parent = node->left;
     node->left = new_parent->right;
     if (new_parent->right != nullptr) {
@@ -154,34 +154,34 @@ void RBTree<Key>::rightRotate(Node* node) {
     node->parent = new_parent;
 }
 
-template <typename Key>
-typename RBTree<Key>::Node* RBTree<Key>::minimum(Node* node) const {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::Node* RBTree<Key, Value>::minimum(Node* node) const {
     while (node->left != nullptr) {
         node = node->left;
     }
     return node;
 }
 
-template <typename Key>
-typename RBTree<Key>::Node* RBTree<Key>::maximum(Node* node) const {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::Node* RBTree<Key, Value>::maximum(Node* node) const {
     while (node->right != nullptr) {
         node = node->right;
     }
     return node;
 }
 
-template <typename Key>
-bool RBTree<Key>::contains(const Key& key) const {
+template <typename Key, typename Value>
+bool RBTree<Key, Value>::contains(const Key& key) const {
     return findNode(key) != nullptr;
 }
 
-template <typename Key>
-typename RBTree<Key>::size_type RBTree<Key>::size() const {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::size_type RBTree<Key, Value>::size() const {
     return node_count;
 }
 
-template <typename Key>
-void RBTree<Key>::erase(const Key& key) {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::erase(const Key& key) {
     Node* node = findNode(key);
     if (node == nullptr)
         return;
@@ -220,8 +220,8 @@ void RBTree<Key>::erase(const Key& key) {
         deleteFixup(replace_node);
 }
 
-template <typename Key>
-void RBTree<Key>::transplant(Node* first_node, Node* second_node) {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::transplant(Node* first_node, Node* second_node) {
     if (first_node->parent == nullptr) {
         root = second_node;
     } else if (first_node == first_node->parent->left) {
@@ -235,8 +235,8 @@ void RBTree<Key>::transplant(Node* first_node, Node* second_node) {
     }
 }
 
-template <typename Key>
-void RBTree<Key>::deleteFixup(Node* node) {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::deleteFixup(Node* node) {
     while (node != root && node->color == BLACK) {
         Node* brother = (node == node->parent->left) ? node->parent->right : node->parent->left;
         if (node == node->parent->left) {
@@ -260,8 +260,8 @@ void RBTree<Key>::deleteFixup(Node* node) {
     node->color = BLACK;
 }
 
-template <typename Key>
-void RBTree<Key>::handleBrother(Node* node, Node* brother) {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::handleBrother(Node* node, Node* brother) {
     if (brother->left->color == BLACK && brother->right->color == BLACK) {
         brother->color = RED;
         node = node->parent;
@@ -281,8 +281,8 @@ void RBTree<Key>::handleBrother(Node* node, Node* brother) {
 }
 
 
-template <typename Key>
-RBTree<Key>& RBTree<Key>::operator=(const RBTree& other) {
+template <typename Key, typename Value>
+RBTree<Key, Value>& RBTree<Key, Value>::operator=(const RBTree& other) {
     if (this != &other) {
         clear(root);
         root = nullptr;
@@ -296,8 +296,8 @@ RBTree<Key>& RBTree<Key>::operator=(const RBTree& other) {
     return *this;
 }
 
-template <typename Key>
-RBTree<Key>& RBTree<Key>::operator=(RBTree&& other) noexcept {
+template <typename Key, typename Value>
+RBTree<Key, Value>& RBTree<Key, Value>::operator=(RBTree&& other) noexcept {
     if (this != &other) {
         clear(root);
         root = other.root;
@@ -309,8 +309,8 @@ RBTree<Key>& RBTree<Key>::operator=(RBTree&& other) noexcept {
     return *this;
 }
 
-template <typename Key>
-typename RBTree<Key>::Node* RBTree<Key>::copySubtree(Node* node, Node* parent) {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::Node* RBTree<Key, Value>::copySubtree(Node* node, Node* parent) {
     if (node == nullptr)
         return nullptr;
     
@@ -326,8 +326,8 @@ typename RBTree<Key>::Node* RBTree<Key>::copySubtree(Node* node, Node* parent) {
 
 
 // Вспомогательные функции для вывода дерева в консоль
-template <typename Key>
-void RBTree<Key>::print() const {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::print() const {
     if (root == nullptr)
         std::cout << "Tree is empty!" << std::endl;
     else {
@@ -336,8 +336,8 @@ void RBTree<Key>::print() const {
     }
 }
 
-template <typename Key>
-void RBTree<Key>::printTree(Node* node, char prefix[], bool isLeft) const {
+template <typename Key, typename Value>
+void RBTree<Key, Value>::printTree(Node* node, char prefix[], bool isLeft) const {
     if (node != nullptr) {
         char newPrefix[1000];
         strcpy(newPrefix, prefix);
@@ -348,7 +348,7 @@ void RBTree<Key>::printTree(Node* node, char prefix[], bool isLeft) const {
             strcpy(newPrefix, prefix);
         }
         std::cout << prefix << (isLeft ? "└── " : "┌── ") 
-                  << node->key << (node->color == RED ? " (R)" : " (B)") << std::endl;
+                  << node->key << " | " << node->value << (node->color == RED ? " (R)" : " (B)") << std::endl;
         strcpy(newPrefix, prefix);
         strcat(newPrefix, (isLeft ? "    " : "│   "));
         if (node->left) {
@@ -358,24 +358,24 @@ void RBTree<Key>::printTree(Node* node, char prefix[], bool isLeft) const {
 }
 
 // Реализация методов для итератора
-template <typename Key>
-typename RBTree<Key>::Node* RBTree<Key>::iterator::treeMinimum(Node* node) const {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::treeMinimum(Node* node) const {
     while (node && node->left) {
         node = node->left;
     }
     return node;
 }
 
-template <typename Key>
-typename RBTree<Key>::Node* RBTree<Key>::iterator::treeMaximum(Node* node) const {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::treeMaximum(Node* node) const {
     while (node && node->right) {
         node = node->right;
     }
     return node;
 }
 
-template <typename Key>
-typename RBTree<Key>::Node* RBTree<Key>::iterator::successor(Node* node) const {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::successor(Node* node) const {
     if (node->right) {
         return treeMinimum(node->right);
     }
@@ -387,8 +387,8 @@ typename RBTree<Key>::Node* RBTree<Key>::iterator::successor(Node* node) const {
     return parent;
 }
 
-template <typename Key>
-typename RBTree<Key>::Node* RBTree<Key>::iterator::predecessor(Node* node) const {
+template <typename Key, typename Value>
+typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::predecessor(Node* node) const {
     if (node->left) {
         return treeMaximum(node->left);
     }
@@ -400,45 +400,33 @@ typename RBTree<Key>::Node* RBTree<Key>::iterator::predecessor(Node* node) const
     return parent;
 }
 
-// Для const_iterator аналогичные методы
-template <typename Key>
-const typename RBTree<Key>::Node* RBTree<Key>::const_iterator::treeMinimum(const Node* node) const {
-    while (node && node->left) {
-        node = node->left;
+template <typename Key, typename Value>
+Value& RBTree<Key, Value>::at(const Key& key) {
+    Node* node = findNode(key);
+    if (node) {
+        return node->value;
+    } else {
+        throw std::out_of_range("Key not found in map");
     }
-    return node;
 }
 
-template <typename Key>
-const typename RBTree<Key>::Node* RBTree<Key>::const_iterator::treeMaximum(const Node* node) const {
-    while (node && node->right) {
-        node = node->right;
+template <typename Key, typename Value>
+const Value& RBTree<Key, Value>::at(const Key& key) const {
+    Node* node = findNode(key);
+    if (node) {
+        return node->value;
+    } else {
+        throw std::out_of_range("Key not found in map");
     }
-    return node;
 }
 
-template <typename Key>
-const typename RBTree<Key>::Node* RBTree<Key>::const_iterator::successor(const Node* node) const {
-    if (node->right) {
-        return treeMinimum(node->right);
+template <typename Key, typename Value>
+Value& RBTree<Key, Value>::getOrInsert(const Key& key) {
+    Node* node = findNode(key);
+    if (node) {
+        return node->value; // Возвращает значение, если ключ найден
     }
-    const Node* parent = node->parent;
-    while (parent && node == parent->right) {
-        node = parent;
-        parent = parent->parent;
-    }
-    return parent;
-}
-
-template <typename Key>
-const typename RBTree<Key>::Node* RBTree<Key>::const_iterator::predecessor(const Node* node) const {
-    if (node->left) {
-        return treeMaximum(node->left);
-    }
-    const Node* parent = node->parent;
-    while (parent && node == parent->left) {
-        node = parent;
-        parent = parent->parent;
-    }
-    return parent;
+    // Вставляем новый узел с дефолтным значением
+    auto [new_node, inserted] = insert(key, Value{});
+    return new_node->value; // Возвращаем значение нового узла
 }

@@ -8,14 +8,14 @@
 
 namespace s21 {
     template <typename Key>
-    class set : public RBTree<Key> {
+    class set : public RBTree<Key, Key> {
     public:
         using key_type = Key;
         using value_type = Key;
         using reference = value_type&;
         using const_reference = const value_type&;
-        using iterator = typename RBTree<Key>::iterator;
-        using const_iterator = typename RBTree<Key>::const_iterator;
+        using iterator = typename RBTree<Key, Key>::iterator;
+        using const_iterator = typename RBTree<Key, Key>::const_iterator;
         using size_type = size_t;
 
         set();
@@ -27,8 +27,8 @@ namespace s21 {
         set& operator=(set &&s) noexcept;
         set& operator=(const set &s);
 
-        bool empty() const { return RBTree<Key>::size() == 0; }
-        size_type size() const { return RBTree<Key>::size(); }
+        bool empty() const { return RBTree<Key, Key>::size() == 0; }
+        size_type size() const { return RBTree<Key, Key>::size(); }
         size_type max_size() const { return std::numeric_limits<size_type>::max(); }
         void clear();
 
@@ -38,7 +38,7 @@ namespace s21 {
         void merge(set& other);
         iterator find(const key_type& key);
         const_iterator find(const key_type& key) const;
-        bool contains(const key_type& key) const { return RBTree<Key>::contains(key); }
+        bool contains(const key_type& key) const { return RBTree<Key, Key>::contains(key); }
         
         template <typename... Args>
         std::vector<std::pair<iterator, bool>> insert_many(Args&&... args);
