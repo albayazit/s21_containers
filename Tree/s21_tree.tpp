@@ -1,5 +1,9 @@
+#ifndef S21_TREE_TPP
+#define S21_TREE_TPP
+
 #include "s21_tree.h"
 
+// Конструкторы
 template <typename Key, typename Value>
 RBTree<Key, Value>::RBTree() : root(nullptr), node_count(0) {}
 
@@ -17,6 +21,7 @@ RBTree<Key, Value>::RBTree(RBTree&& other) noexcept : root(other.root), node_cou
     other.node_count = 0;
 }
 
+// Деструктор
 template <typename Key, typename Value>
 RBTree<Key, Value>::~RBTree() { clear(root); }
 
@@ -29,6 +34,7 @@ void RBTree<Key, Value>::clear(Node* node) {
     }
 }
 
+// Нахождение узла по ключу
 template <typename Key, typename Value>
 typename RBTree<Key, Value>::Node* RBTree<Key, Value>::findNode(const Key& key) const {
     Node* current = root;
@@ -45,6 +51,7 @@ typename RBTree<Key, Value>::Node* RBTree<Key, Value>::findNode(const Key& key) 
     return nullptr;
 }
 
+// Вставка нового узла
 template <typename Key, typename Value>
 std::pair<typename RBTree<Key, Value>::Node*, bool> RBTree<Key, Value>::insert(const Key& key, const Value& value) {
     Node* new_node = new Node(key, value);
@@ -53,12 +60,42 @@ std::pair<typename RBTree<Key, Value>::Node*, bool> RBTree<Key, Value>::insert(c
 
     while(find_place_node != nullptr) {
         parent_node = find_place_node;
+        if (new_node->key < find_place_node->key) {
+            find_place_node = find_place_node->left;
+        } else if (new_node->key > find_place_node->key) {
+            find_place_node = find_place_node->right;
+        } else {
+            delete new_node;
+            return std::make_pair(find_place_node, false);
+        }
+    }
+    new_node->parent = parent_node;
+    if (parent_node == nullptr)
+        root = new_node;
+    else if (new_node->key < parent_node->key)
+        parent_node->left = new_node;
+    else
+        parent_node->right = new_node;
+    
+    new_node->color = RED;
+    insertFixup(new_node);
+    node_count++;
+    return std::make_pair(new_node, true);
+}
+
+// Вставка нового узла (значения могут повторяться, для multiset)
+template <typename Key, typename Value>
+std::pair<typename RBTree<Key, Value>::Node*, bool> RBTree<Key, Value>::insertMulti(const Key& key, const Value& value) {
+    Node* new_node = new Node(key, value);
+    Node* parent_node = nullptr;
+    Node* find_place_node = root;
+
+    while(find_place_node != nullptr) {
+        parent_node = find_place_node;
         if (new_node->key < find_place_node->key)
             find_place_node = find_place_node->left;
-        else if (new_node->key > find_place_node->key)
-            find_place_node = find_place_node->right;
         else
-            return std::make_pair(find_place_node, false); // Key, Value already exist
+            find_place_node = find_place_node->right;
     }
 
     new_node->parent = parent_node;
@@ -76,6 +113,7 @@ std::pair<typename RBTree<Key, Value>::Node*, bool> RBTree<Key, Value>::insert(c
     return std::make_pair(new_node, true);
 }
 
+// Балансировка дерева при вставке узла
 template <typename Key, typename Value>
 void RBTree<Key, Value>::insertFixup(Node* node) {
     while (node->parent && node->parent->color == RED) {
@@ -116,6 +154,7 @@ void RBTree<Key, Value>::insertFixup(Node* node) {
     root->color = BLACK;
 }
 
+// Левый поворот дерев
 template <typename Key, typename Value>
 void RBTree<Key, Value>::leftRotate(Node* node) {
     Node* new_parent = node->right;
@@ -135,6 +174,7 @@ void RBTree<Key, Value>::leftRotate(Node* node) {
     node->parent = new_parent;
 }
 
+// Правый поворот дерева
 template <typename Key,typename Value>
 void RBTree<Key, Value>::rightRotate(Node* node) {
     Node* new_parent = node->left;
@@ -154,6 +194,7 @@ void RBTree<Key, Value>::rightRotate(Node* node) {
     node->parent = new_parent;
 }
 
+// Поиск минимального узла
 template <typename Key, typename Value>
 typename RBTree<Key, Value>::Node* RBTree<Key, Value>::minimum(Node* node) const {
     while (node->left != nullptr) {
@@ -162,6 +203,7 @@ typename RBTree<Key, Value>::Node* RBTree<Key, Value>::minimum(Node* node) const
     return node;
 }
 
+// Поиск максимального узла
 template <typename Key, typename Value>
 typename RBTree<Key, Value>::Node* RBTree<Key, Value>::maximum(Node* node) const {
     while (node->right != nullptr) {
@@ -170,16 +212,19 @@ typename RBTree<Key, Value>::Node* RBTree<Key, Value>::maximum(Node* node) const
     return node;
 }
 
+// Проверка на существование узла
 template <typename Key, typename Value>
 bool RBTree<Key, Value>::contains(const Key& key) const {
     return findNode(key) != nullptr;
 }
 
+// Количество узлов в дереве
 template <typename Key, typename Value>
 typename RBTree<Key, Value>::size_type RBTree<Key, Value>::size() const {
     return node_count;
 }
 
+// Удаление узла по ключу
 template <typename Key, typename Value>
 void RBTree<Key, Value>::erase(const Key& key) {
     Node* node = findNode(key);
@@ -189,10 +234,10 @@ void RBTree<Key, Value>::erase(const Key& key) {
     Node* replace_node = nullptr;
     Color orig_color = delete_node->color;
 
-    if (node->left == nullptr) { // Нет левого потомка
+    if (node->left == nullptr) {
         replace_node = node->right;
         transplant(node, node->right);
-    } else if (node->right == nullptr) { // Нет правого потомка
+    } else if (node->right == nullptr) {
         replace_node = node->left;
         transplant(node, node->left);
     } else { // Есть оба потомка
@@ -220,6 +265,7 @@ void RBTree<Key, Value>::erase(const Key& key) {
         deleteFixup(replace_node);
 }
 
+// Перестановка узлов местами
 template <typename Key, typename Value>
 void RBTree<Key, Value>::transplant(Node* first_node, Node* second_node) {
     if (first_node->parent == nullptr) {
@@ -235,6 +281,7 @@ void RBTree<Key, Value>::transplant(Node* first_node, Node* second_node) {
     }
 }
 
+// Балансировка дерева при удалении узла
 template <typename Key, typename Value>
 void RBTree<Key, Value>::deleteFixup(Node* node) {
     while (node != root && node->color == BLACK) {
@@ -260,6 +307,7 @@ void RBTree<Key, Value>::deleteFixup(Node* node) {
     node->color = BLACK;
 }
 
+// Проверка "брата" узла при балансировке
 template <typename Key, typename Value>
 void RBTree<Key, Value>::handleBrother(Node* node, Node* brother) {
     if (brother->left->color == BLACK && brother->right->color == BLACK) {
@@ -280,7 +328,7 @@ void RBTree<Key, Value>::handleBrother(Node* node, Node* brother) {
     }
 }
 
-
+// Перегрузка оператора = (копирующее присваивание)
 template <typename Key, typename Value>
 RBTree<Key, Value>& RBTree<Key, Value>::operator=(const RBTree& other) {
     if (this != &other) {
@@ -296,6 +344,7 @@ RBTree<Key, Value>& RBTree<Key, Value>::operator=(const RBTree& other) {
     return *this;
 }
 
+// Перегрузка оператора = (перемещающее присваивание)
 template <typename Key, typename Value>
 RBTree<Key, Value>& RBTree<Key, Value>::operator=(RBTree&& other) noexcept {
     if (this != &other) {
@@ -309,6 +358,7 @@ RBTree<Key, Value>& RBTree<Key, Value>::operator=(RBTree&& other) noexcept {
     return *this;
 }
 
+// Копирование узла
 template <typename Key, typename Value>
 typename RBTree<Key, Value>::Node* RBTree<Key, Value>::copySubtree(Node* node, Node* parent) {
     if (node == nullptr)
@@ -374,6 +424,7 @@ typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::treeMaximum(Nod
     return node;
 }
 
+// Поиск следующего узла
 template <typename Key, typename Value>
 typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::successor(Node* node) const {
     if (node->right) {
@@ -387,6 +438,7 @@ typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::successor(Node*
     return parent;
 }
 
+// Поиск предыдущего узла
 template <typename Key, typename Value>
 typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::predecessor(Node* node) const {
     if (node->left) {
@@ -400,6 +452,50 @@ typename RBTree<Key, Value>::Node* RBTree<Key, Value>::iterator::predecessor(Nod
     return parent;
 }
 
+// Реализация константных методов для итератора
+template <typename Key, typename Value>
+const typename RBTree<Key, Value>::Node* RBTree<Key, Value>::const_iterator::treeMinimum(const Node* node) const {
+    while (node && node->left) {
+        node = node->left;
+    }
+    return node;
+}
+
+template <typename Key, typename Value>
+const typename RBTree<Key, Value>::Node* RBTree<Key, Value>::const_iterator::treeMaximum(const Node* node) const {
+    while (node && node->right) {
+        node = node->right;
+    }
+    return node;
+}
+
+template <typename Key, typename Value>
+const typename RBTree<Key, Value>::Node* RBTree<Key, Value>::const_iterator::successor(const Node* node) const {
+    if (node->right) {
+        return treeMinimum(node->right);
+    }
+    const Node* parent = node->parent;
+    while (parent && node == parent->right) {
+        node = parent;
+        parent = parent->parent;
+    }
+    return parent;
+}
+
+template <typename Key, typename Value>
+const typename RBTree<Key, Value>::Node* RBTree<Key, Value>::const_iterator::predecessor(const Node* node) const {
+    if (node->left) {
+        return treeMaximum(node->left);
+    }
+    const Node* parent = node->parent;
+    while (parent && node == parent->left) {
+        node = parent;
+        parent = parent->parent;
+    }
+    return parent;
+}
+
+// Возврат значения по ключу
 template <typename Key, typename Value>
 Value& RBTree<Key, Value>::at(const Key& key) {
     Node* node = findNode(key);
@@ -420,13 +516,15 @@ const Value& RBTree<Key, Value>::at(const Key& key) const {
     }
 }
 
+// Вставка или изменение существующего ключа
 template <typename Key, typename Value>
 Value& RBTree<Key, Value>::getOrInsert(const Key& key) {
     Node* node = findNode(key);
     if (node) {
-        return node->value; // Возвращает значение, если ключ найден
+        return node->value;
     }
-    // Вставляем новый узел с дефолтным значением
     auto [new_node, inserted] = insert(key, Value{});
-    return new_node->value; // Возвращаем значение нового узла
+    return new_node->value;
 }
+
+#endif

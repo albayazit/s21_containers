@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <utility> // std::pair
+#include <optional>
 
 template <typename Key, typename Value>
 class RBTree {
@@ -18,6 +19,7 @@ class RBTree {
             Node(Key k, Value v, Color c = RED) : key(k), value(v), left(nullptr), right(nullptr), parent(nullptr), color(c) {}
         };
 
+        // Приватные методы класса
         void leftRotate(Node* node);
         void rightRotate(Node* node);
         void insertFixup(Node* node);
@@ -38,6 +40,7 @@ class RBTree {
         using value_type = Value;
         using size_type =  size_t;
 
+        // Конструкторы и деструктор
         RBTree();
         RBTree(const RBTree& other);
         RBTree(RBTree&& other) noexcept;
@@ -46,7 +49,9 @@ class RBTree {
         ~RBTree();
         void clear(Node* node);
 
+        // Публичные методы класса
         std::pair<Node*, bool> insert(const Key& key, const Value& value);
+        std::pair<Node*, bool> insertMulti(const Key& key, const Value& value);
         void erase(const Key& key);
         bool contains(const Key& key) const;
         void print() const;
@@ -55,7 +60,15 @@ class RBTree {
         Value& at(const Key& key);
         const Value& at(const Key& key) const;
         Value& getOrInsert(const Key& key);
+        size_type count(const Key& key) const {
+            size_type count = 0;
+            for (auto it = begin(); it != end(); ++it) {
+                if (*it == key) ++count;
+            }
+            return count;
+        }
 
+        // Итератор
         class iterator {
             private:
                 Node* current;
@@ -96,6 +109,7 @@ class RBTree {
                 bool operator==(const iterator& other) const { return current == other.current; }
                 bool operator!=(const iterator& other) const { return current != other.current; }
         };
+        // Итератор для константных объектов
         class const_iterator {
             private:
                 const Node* current;
@@ -136,7 +150,38 @@ class RBTree {
                 bool operator==(const const_iterator& other) const { return current == other.current; }
                 bool operator!=(const const_iterator& other) const { return current != other.current; }
         };
-
+        // Первый элемент, больший или равный key
+        iterator lower_bound(const Key& key) {
+            Node* node = root;
+            Node* result = nullptr;
+            while (node) {
+                if (key <= node->key) {
+                    result = node;
+                    node = node->left;
+                } else {
+                    node = node->right;
+                }
+            }
+            return iterator(root, result);
+        }
+        // Первый элемент, больший key
+        iterator upper_bound(const Key& key) {
+            Node* node = root;
+            Node* result = nullptr;
+            while (node) {
+                if (key < node->key) {
+                    result = node;
+                    node = node->left;
+                } else {
+                    node = node->right;
+                }
+            }
+            return iterator(root, result);
+        }
+        // Диапазон элементов с данным ключом
+        std::pair<iterator, iterator> equal_range(const Key& key) {
+            return {lower_bound(key), upper_bound(key)};
+        }
         iterator begin() { return iterator(root, minimum(root)); }
         iterator end() { return iterator(root, nullptr); }
         const_iterator begin() const { return const_iterator(root, minimum(root)); }

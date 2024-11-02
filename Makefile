@@ -1,34 +1,38 @@
 CC = g++
-CFLAGS = -Wall -Werror -Wextra -std=c++17 -g -I./headers
-# -I/opt/homebrew/include
+CFLAGS = -Wall -Werror -Wextra -std=c++17 -g -I/opt/homebrew/include -I./Set -I./Tree -I./Map -I./Multiset
 
-EXEC = s21_containers.a
 EXEC_T = unit_tests
-PATH_TO_TESTS = tests/
+PATH_TO_TESTS = Tests/
 
-SRC = $(wildcard *.cc)
-OBJ = $(patsubst %.cc, %.o, $(SRC))
+# Исходные файлы тестов
 SRC_T = $(wildcard $(PATH_TO_TESTS)*.cc)
 OBJ_T = $(patsubst %.cc, %.o, $(SRC_T))
 
 OS := $(shell uname -s)
 
-all: $(EXEC)
+all: test
 
-$(EXEC): $(OBJ)
-	ar rc $@ $(OBJ)
-	ranlib $@
-
-test: $(OBJ_T) $(EXEC)
+# Компиляция тестов
+test: $(OBJ_T)
 ifeq ($(OS), Darwin)
-	$(CC) $(CFLAGS) $(OBJ_T) $(EXEC) -o $(PATH_TO_TESTS)$(EXEC_T) -L/opt/homebrew/lib -lgtest -lgtest_main -lpthread
+	$(CC) $(CFLAGS) $(OBJ_T) -o $(PATH_TO_TESTS)$(EXEC_T) -L/opt/homebrew/lib -lgtest -lgtest_main -lpthread
 else
-	$(CC) $(CFLAGS) $(OBJ_T) $(EXEC) -o $(PATH_TO_TESTS)$(EXEC_T) -lgtest -lgtest_main -lpthread
+	$(CC) $(CFLAGS) $(OBJ_T) -o $(PATH_TO_TESTS)$(EXEC_T) -lgtest -lgtest_main -lpthread
 endif
-	$(PATH_TO_TESTS)./$(EXEC_T)
+	$(PATH_TO_TESTS)$(EXEC_T)
 
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Очистка
 clean:
-	rm -rf *.o $(EXEC) ./tests/*.o $(PATH_TO_TESTS)./$(EXEC_T)
+	rm -rf $(OBJ_T) $(PATH_TO_TESTS)$(EXEC_T)
+
+# Проверка утечек памяти (только для macOS)
+leaks_test: $(OBJ_T)
+ifeq ($(OS), Darwin)
+	$(CC) $(CFLAGS) $(OBJ_T) -o $(PATH_TO_TESTS)$(EXEC_T) -L/opt/homebrew/lib -lgtest -lgtest_main -lpthread
+	leaks --atExit -- $(PATH_TO_TESTS)$(EXEC_T)
+else
+	@echo "leaks is only available on macOS."
+endif
